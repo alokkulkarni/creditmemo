@@ -1,0 +1,48 @@
+{
+  "requester": {
+    "requesterId": "SYS001",
+    "requesterType": "SYSTEM_AUTOMATED",
+    "name": "Automated Return System",
+    "email": "returns@bank.com",
+    "department": "Returns Processing"
+  },
+  "customer": {
+    "customerId": "CUST67890",
+    "customerName": "TechStart Inc",
+    "email": "finance@techstart.com",
+    "phone": "+1-555-0200",
+    "billingAddress": {
+      "street": "456 Innovation Drive",
+      "city": "San Francisco",
+      "state": "CA",
+      "zipCode": "94105",
+      "country": "USA"
+    },
+    "accountNumber": "ACC123789"
+  },
+  "originalTransaction": {
+    "transactionId": "TXN002",
+    "invoiceNumber": "INV-2024-045",
+    "transactionDate": "2024-11-01",
+    "originalAmount": 12000.00,
+    "currency": "USD",
+    "lineItems": [
+      {
+        "itemId": "ITEM100",
+        "description": "Software License - Annual Subscription",
+        "quantity": 10,
+        "unitPrice": 1200.00,
+        "totalPrice": 12000.00
+      }
+    ]
+  },
+  "creditDetails": {
+    "reason": "PRODUCT_RETURN",
+    "reasonDescription": "Customer returned 3 unused software licenses within the 30-day return window. Licenses were never activated.",
+    "creditAmount": 3600.00,
+    "affectedItems": ["ITEM100"],
+    "additionalNotes": "Return approved. 3 of 10 licenses returned. Customer retaining 7 licenses.",
+    "requiresApproval": false,
+    "approverEmail": null
+  }
+}

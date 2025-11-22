@@ -1,0 +1,48 @@
+{
+  "requester": {
+    "requesterId": "CUST11111",
+    "requesterType": "BUSINESS_CUSTOMER",
+    "name": "Sarah Johnson",
+    "email": "sarah.j@retailcorp.com",
+    "department": "Purchasing"
+  },
+  "customer": {
+    "customerId": "CUST11111",
+    "customerName": "RetailCorp LLC",
+    "email": "accounting@retailcorp.com",
+    "phone": "+1-555-0300",
+    "billingAddress": {
+      "street": "789 Commerce Street",
+      "city": "Chicago",
+      "state": "IL",
+      "zipCode": "60601",
+      "country": "USA"
+    },
+    "accountNumber": "ACC456123"
+  },
+  "originalTransaction": {
+    "transactionId": "TXN003",
+    "invoiceNumber": "INV-2024-089",
+    "transactionDate": "2024-10-15",
+    "originalAmount": 25000.00,
+    "currency": "USD",
+    "lineItems": [
+      {
+        "itemId": "ITEM200",
+        "description": "Consulting Services - October 2024",
+        "quantity": 100,
+        "unitPrice": 250.00,
+        "totalPrice": 25000.00
+      }
+    ]
+  },
+  "creditDetails": {
+    "reason": "SERVICE_ISSUE",
+    "reasonDescription": "Services were not delivered to the agreed quality standard. Project deliverables were incomplete and required significant rework by customer's internal team.",
+    "creditAmount": 7500.00,
+    "affectedItems": ["ITEM200"],
+    "additionalNotes": "Customer and service team have agreed on 30% credit as fair compensation. Future services will include enhanced quality controls.",
+    "requiresApproval": true,
+    "approverEmail": "director@bank.com"
+  }
+}
