@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
@@ -106,72 +107,208 @@ public class CreditMemoService {
     @NonNull
     @SuppressWarnings("null")
     private String buildCreditMemoPrompt(@NonNull CreditMemoRequest request) {
+        // Determine context based on requester type
+        String contextNote = switch (request.requester().requesterType()) {
+            case BUSINESS_CUSTOMER -> "This credit memo is issued by a business banking customer for their own customer.";
+            case BANK_COLLEAGUE -> "This credit memo corrects an incorrect fee charge posted by the bank.";
+            case SYSTEM_AUTOMATED -> "This credit memo is system-generated for automated processing.";
+            case CUSTOMER_SERVICE -> "This credit memo is issued by customer service on behalf of the customer.";
+        };
+        
+        // Build detailed line items information
+        StringBuilder lineItemsDetail = new StringBuilder();
+        if (request.originalTransaction().lineItems() != null && !request.originalTransaction().lineItems().isEmpty()) {
+            request.originalTransaction().lineItems().forEach(item -> {
+                lineItemsDetail.append(String.format("\n  - Item: %s | Description: %s | Qty: %d | Unit Price: %.2f %s | Total: %.2f %s",
+                    item.itemId(),
+                    item.description(),
+                    item.quantity(),
+                    item.unitPrice(),
+                    request.originalTransaction().currency(),
+                    item.totalPrice(),
+                    request.originalTransaction().currency()));
+            });
+        }
+        
+        // Calculate tax (assuming 20% UK VAT for business transactions)
+        BigDecimal creditAmount = request.creditDetails().creditAmount();
+        BigDecimal taxRate = new BigDecimal("0.20");
+        BigDecimal subtotal = creditAmount.divide(BigDecimal.ONE.add(taxRate), 2, java.math.RoundingMode.HALF_UP);
+        BigDecimal taxAmount = creditAmount.subtract(subtotal);
+        
+        // Determine credit type
+        String creditType = creditAmount.compareTo(request.originalTransaction().originalAmount()) >= 0 ? "FULL" : "PARTIAL";
+        
+        // Generate unique credit memo number
+        String creditMemoNumber = String.format("CM-%s-%s", 
+            LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy")),
+            UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        
         return String.format("""
-            You are a financial document specialist tasked with generating a professional credit memo.
+            Generate a professional UK business banking credit memo using the following data:
             
-            COMPANY CONTEXT:
-            This credit memo is being issued by our financial institution.
+            === CONTEXT ===
+            %s
             
-            REQUESTER INFORMATION:
-            - Requester Type: %s
-            - Name: %s
-            - Department: %s
+            === CREDIT MEMO DETAILS ===
+            Credit Memo Number: %s
+            Issue Date: %s
+            Company: UK Business Bank PLC
+            Company Address: 1 Bank Street, London, EC2R 8AH, United Kingdom
             
-            CUSTOMER INFORMATION:
-            - Customer ID: %s
-            - Name: %s
-            - Email: %s
-            - Account Number: %s
-            - Address: %s, %s, %s %s, %s
+            === CUSTOMER INFORMATION ===
+            Customer ID: %s
+            Customer Name: %s
+            Customer Email: %s
+            Customer Phone: %s
+            Billing Address: %s, %s, %s %s, %s
+            Account Number: %s
             
-            ORIGINAL TRANSACTION:
-            - Transaction ID: %s
-            - Invoice Number: %s
-            - Transaction Date: %s
-            - Original Amount: %s %s
-            - Number of Line Items: %d
+            === ORIGINAL TRANSACTION ===
+            Transaction ID: %s
+            Invoice Number: %s
+            Invoice Date: %s
+            Original Amount: %.2f %s
+            Line Items: %s
             
-            CREDIT REASON:
-            - Reason: %s
-            - Description: %s
-            - Credit Amount: %s %s
-            - Additional Notes: %s
+            === CREDIT DETAILS ===
+            Credit Type: %s
+            Credit Reason: %s
+            Reason Description: %s
+            Credit Amount (incl. tax): %.2f %s
+            Subtotal (excl. tax): %.2f %s
+            Tax Amount (20%% VAT): %.2f %s
+            Affected Items: %s
+            Additional Notes: %s
             
-            REQUIREMENTS:
-            1. Generate a complete, professional credit memo document
-            2. Include all relevant financial details
-            3. Use formal business language
-            4. Ensure accuracy of all amounts and calculations
-            5. Include clear explanation of the credit reason
-            6. Add appropriate terms and conditions
-            7. Credit memo number should follow format: CM-[YEAR]-[SEQUENCE]
-            8. Issue date should be today's date
+            === AUTHORIZATION ===
+            Requested By: %s
+            Requester Type: %s
+            Requester Email: %s
+            Department: %s
             
-            Generate the credit memo as a structured document that can be officially issued to the customer.
-            Ensure all financial calculations are accurate and all required fields are populated.
+            
+            YOU MUST OUTPUT ONLY THE FOLLOWING JSON STRUCTURE (NO OTHER TEXT):
+            {
+              "creditMemoNumber": "%s",
+              "issueDate": "%s",
+              "companyName": "UK Business Bank PLC",
+              "companyAddress": "1 Bank Street, London, EC2R 8AH, United Kingdom",
+              "customer": {
+                "customerId": "%s",
+                "name": "%s",
+                "address": "%s, %s, %s %s, %s",
+                "email": "%s",
+                "phone": "%s"
+              },
+              "originalInvoice": {
+                "invoiceNumber": "%s",
+                "invoiceDate": "%s",
+                "originalAmount": %.2f
+              },
+              "creditInfo": {
+                "reason": "%s",
+                "detailedExplanation": "[Write a professional 3-4 sentence explanation suitable for UK business banking. Include: (1) What is being credited, (2) Why the credit is being issued, (3) Impact on customer account, (4) Any follow-up actions if applicable. Use formal business tone.]",
+                "creditType": "%s"
+              },
+              "creditLineItems": [
+                [FOR EACH affected item, create an entry with format:]
+                {
+                  "itemDescription": "[Item description from line items]",
+                  "quantity": [quantity as integer],
+                  "unitPrice": [unit price as decimal],
+                  "lineTotal": [line total as decimal],
+                  "reasonForCredit": "[Specific reason for this item's credit]"
+                }
+              ],
+              "financialSummary": {
+                "subtotal": %.2f,
+                "taxAmount": %.2f,
+                "totalCreditAmount": %.2f,
+                "currency": "%s"
+              },
+              "termsAndConditions": "This credit memo will be applied to your account within 5-7 business days. The credited amount will be reflected in your next statement. For queries, please contact our customer service team at customerservice@ukbusinessbank.com or call 0800-123-4567. Credit memo issued in accordance with UK business banking regulations and FCA guidelines.",
+              "authorizedBy": "%s",
+              "notes": "%s"
+            }
+            
+            CRITICAL REQUIREMENTS:
+            1. Output ONLY valid JSON - no markdown, no code blocks, no explanations
+            2. Use provided values exactly as shown
+            3. creditLineItems array must contain at least one item based on the affected items
+            4. detailedExplanation must be professional, factual, and specific to this transaction
+            5. All numeric values must be decimals without commas
+            6. Dates in YYYY-MM-DD format
+            7. Do not invent any financial figures - calculate from provided data
             """,
-            request.requester().requesterType(),
-            request.requester().name(),
-            request.requester().department(),
+            // Context
+            contextNote,
+            
+            // Header information
+            creditMemoNumber,
+            LocalDateTime.now().toLocalDate(),
+            
+            // Customer information
             request.customer().customerId(),
             request.customer().customerName(),
             request.customer().email(),
-            request.customer().accountNumber(),
+            request.customer().phone() != null ? request.customer().phone() : "N/A",
             request.customer().billingAddress().street(),
             request.customer().billingAddress().city(),
             request.customer().billingAddress().state(),
             request.customer().billingAddress().zipCode(),
             request.customer().billingAddress().country(),
+            request.customer().accountNumber(),
+            
+            // Original transaction
             request.originalTransaction().transactionId(),
             request.originalTransaction().invoiceNumber(),
             request.originalTransaction().transactionDate(),
             request.originalTransaction().originalAmount(),
             request.originalTransaction().currency(),
-            request.originalTransaction().lineItems().size(),
+            lineItemsDetail.toString(),
+            
+            // Credit details
+            creditType,
             request.creditDetails().reason(),
             request.creditDetails().reasonDescription(),
-            request.creditDetails().creditAmount(),
+            creditAmount,
             request.originalTransaction().currency(),
+            subtotal,
+            request.originalTransaction().currency(),
+            taxAmount,
+            request.originalTransaction().currency(),
+            request.creditDetails().affectedItems() != null ? String.join(", ", request.creditDetails().affectedItems()) : "All items",
+            request.creditDetails().additionalNotes(),
+            
+            // Authorization
+            request.requester().name(),
+            request.requester().requesterType(),
+            request.requester().email(),
+            request.requester().department() != null ? request.requester().department() : "N/A",
+            
+            // JSON template values
+            creditMemoNumber,
+            LocalDateTime.now().toLocalDate(),
+            request.customer().customerId(),
+            request.customer().customerName(),
+            request.customer().billingAddress().street(),
+            request.customer().billingAddress().city(),
+            request.customer().billingAddress().state(),
+            request.customer().billingAddress().zipCode(),
+            request.customer().billingAddress().country(),
+            request.customer().email(),
+            request.customer().phone() != null ? request.customer().phone() : "N/A",
+            request.originalTransaction().invoiceNumber(),
+            request.originalTransaction().transactionDate(),
+            request.originalTransaction().originalAmount(),
+            request.creditDetails().reason(),
+            creditType,
+            subtotal,
+            taxAmount,
+            creditAmount,
+            request.originalTransaction().currency(),
+            request.requester().name(),
             request.creditDetails().additionalNotes()
         );
     }
@@ -293,14 +430,18 @@ public class CreditMemoService {
         sb.append(document.creditInfo().detailedExplanation()).append("\n\n");
         
         sb.append("CREDIT LINE ITEMS:\n");
-        document.creditLineItems().forEach(item -> {
-            sb.append(String.format("- %s (Qty: %d) @ %s = %s - %s\n",
-                item.itemDescription(),
-                item.quantity(),
-                item.unitPrice(),
-                item.lineTotal(),
-                item.reasonForCredit()));
-        });
+        if (document.creditLineItems() != null && !document.creditLineItems().isEmpty()) {
+            document.creditLineItems().forEach(item -> {
+                sb.append(String.format("- %s (Qty: %d) @ %s = %s - %s\n",
+                    item.itemDescription(),
+                    item.quantity(),
+                    item.unitPrice(),
+                    item.lineTotal(),
+                    item.reasonForCredit()));
+            });
+        } else {
+            sb.append("- No line item breakdown available\n");
+        }
         
         sb.append("\nFINANCIAL SUMMARY:\n");
         sb.append("Subtotal: ").append(document.financialSummary().subtotal()).append("\n");
