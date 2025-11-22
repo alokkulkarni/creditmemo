@@ -3,29 +3,29 @@
     "requesterId": "REQ001",
     "requesterType": "BANK_COLLEAGUE",
     "name": "John Smith",
-    "email": "john.smith@bank.com",
+    "email": "john.smith@ukbusinessbank.com",
     "department": "Customer Service"
   },
   "customer": {
     "customerId": "CUST12345",
-    "customerName": "Acme Corporation",
-    "email": "billing@acme.com",
-    "phone": "+1-555-0100",
+    "customerName": "Acme Corporation Ltd",
+    "email": "billing@acme.co.uk",
+    "phone": "+44-20-7123-4567",
     "billingAddress": {
-      "street": "123 Business Blvd",
-      "city": "New York",
-      "state": "NY",
-      "zipCode": "10001",
-      "country": "USA"
+      "street": "123 High Street",
+      "city": "London",
+      "state": "Greater London",
+      "zipCode": "EC1A 1BB",
+      "country": "United Kingdom"
     },
-    "accountNumber": "ACC789456"
+    "accountNumber": "GB29NWBK60161331926819"
   },
   "originalTransaction": {
     "transactionId": "TXN001",
     "invoiceNumber": "INV-2024-001",
     "transactionDate": "2024-01-15",
     "originalAmount": 5000.00,
-    "currency": "USD",
+    "currency": "GBP",
     "lineItems": [
       {
         "itemId": "ITEM001",
@@ -38,11 +38,11 @@
   },
   "creditDetails": {
     "reason": "BILLING_ERROR",
-    "reasonDescription": "Incorrect pricing applied due to system error. Customer contract rate was $4,500 but system charged $5,000.",
+    "reasonDescription": "Incorrect pricing applied due to system error. Customer contract rate was £4,500 but system charged £5,000.",
     "creditAmount": 500.00,
     "affectedItems": ["ITEM001"],
-    "additionalNotes": "Customer has been notified of the correction and apologized for the inconvenience.",
+    "additionalNotes": "Customer has been notified of the correction and apologised for the inconvenience.",
     "requiresApproval": true,
-    "approverEmail": "manager@bank.com"
+    "approverEmail": "manager@ukbusinessbank.com"
   }
 }

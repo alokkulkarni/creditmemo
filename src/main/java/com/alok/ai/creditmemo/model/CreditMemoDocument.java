@@ -10,10 +10,13 @@ import java.util.List;
 public record CreditMemoDocument(
     String creditMemoNumber,
     LocalDate issueDate,
-    String companyName,
-    String companyAddress,
     
-    CustomerDetails customer,
+    // Issuer: Either the bank or the business customer issuing the credit memo
+    IssuerDetails issuer,
+    
+    // Recipient: The customer receiving the credit memo
+    RecipientDetails recipient,
+    
     OriginalInvoiceReference originalInvoice,
     CreditInformation creditInfo,
     
@@ -26,12 +29,30 @@ public record CreditMemoDocument(
     String notes
 ) {
     
-    public record CustomerDetails(
+    public record IssuerDetails(
+        String name,
+        String address,
+        String email,
+        String phone,
+        String accountNumber
+    ) {}
+    
+    public record RecipientDetails(
         String customerId,
         String name,
         String address,
         String email,
-        String phone
+        String phone,
+        String accountNumber,
+        BankDetails bankDetails  // Optional: Bank details if customer banks elsewhere
+    ) {}
+    
+    public record BankDetails(
+        String bankName,
+        String bankBranch,
+        String sortCode,
+        String swiftCode,
+        String accountHolderName
     ) {}
     
     public record OriginalInvoiceReference(

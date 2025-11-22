@@ -3,29 +3,29 @@
     "requesterId": "CUST11111",
     "requesterType": "BUSINESS_CUSTOMER",
     "name": "Sarah Johnson",
-    "email": "sarah.j@retailcorp.com",
+    "email": "sarah.j@retailcorp.co.uk",
     "department": "Purchasing"
   },
   "customer": {
     "customerId": "CUST11111",
-    "customerName": "RetailCorp LLC",
-    "email": "accounting@retailcorp.com",
-    "phone": "+1-555-0300",
+    "customerName": "RetailCorp Ltd",
+    "email": "accounting@retailcorp.co.uk",
+    "phone": "+44-121-234-5678",
     "billingAddress": {
       "street": "789 Commerce Street",
-      "city": "Chicago",
-      "state": "IL",
-      "zipCode": "60601",
-      "country": "USA"
+      "city": "Birmingham",
+      "state": "West Midlands",
+      "zipCode": "B1 1AA",
+      "country": "United Kingdom"
     },
-    "accountNumber": "ACC456123"
+    "accountNumber": "GB33BUKB20201555555555"
   },
   "originalTransaction": {
     "transactionId": "TXN003",
     "invoiceNumber": "INV-2024-089",
     "transactionDate": "2024-10-15",
     "originalAmount": 25000.00,
-    "currency": "USD",
+    "currency": "GBP",
     "lineItems": [
       {
         "itemId": "ITEM200",
@@ -43,6 +43,6 @@
     "affectedItems": ["ITEM200"],
     "additionalNotes": "Customer and service team have agreed on 30% credit as fair compensation. Future services will include enhanced quality controls.",
     "requiresApproval": true,
-    "approverEmail": "director@bank.com"
+    "approverEmail": "director@ukbusinessbank.com"
   }
 }

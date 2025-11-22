@@ -1,0 +1,75 @@
+{
+  "requester": {
+    "requesterId": "REQ003",
+    "requesterType": "BUSINESS_CUSTOMER",
+    "name": "Michael Brown",
+    "email": "michael.brown@retailcorp.co.uk",
+    "department": "Accounts Payable"
+  },
+  "issuer": {
+    "companyName": "RetailCorp Ltd",
+    "email": "accounting@retailcorp.co.uk",
+    "phone": "+44-121-234-5678",
+    "address": {
+      "street": "789 Commerce Street",
+      "city": "Birmingham",
+      "state": "West Midlands",
+      "zipCode": "B1 1AA",
+      "country": "United Kingdom"
+    },
+    "accountNumber": "GB33BUKB20201555555555"
+  },
+  "customer": {
+    "customerId": "CUST45678",
+    "customerName": "Northern Supplies Limited",
+    "email": "finance@northernsupplies.co.uk",
+    "phone": "+44-113-234-5678",
+    "billingAddress": {
+      "street": "78 Industrial Park Road",
+      "city": "Leeds",
+      "state": "West Yorkshire",
+      "zipCode": "LS10 1AB",
+      "country": "United Kingdom"
+    },
+    "accountNumber": "GB15BARC20114787654321",
+    "bankDetails": {
+      "bankName": "Barclays Bank PLC",
+      "bankBranch": "Leeds City Centre Branch",
+      "sortCode": "20-11-47",
+      "swiftCode": "BARCGB22",
+      "accountHolderName": "Northern Supplies Limited"
+    }
+  },
+  "originalTransaction": {
+    "transactionId": "TXN456",
+    "invoiceNumber": "INV-RC-2024-089",
+    "transactionDate": "2024-11-01",
+    "originalAmount": 4800.00,
+    "currency": "GBP",
+    "lineItems": [
+      {
+        "itemId": "PROD001",
+        "description": "Office Equipment - Standing Desks",
+        "quantity": 12,
+        "unitPrice": 350.00,
+        "totalPrice": 4200.00
+      },
+      {
+        "itemId": "DELIV001",
+        "description": "Delivery and Installation Service",
+        "quantity": 1,
+        "unitPrice": 600.00,
+        "totalPrice": 600.00
+      }
+    ]
+  },
+  "creditDetails": {
+    "reason": "DEFECTIVE_GOODS",
+    "reasonDescription": "3 standing desks were delivered with damaged height adjustment mechanisms and could not be repaired. Customer has returned the defective units and requested a credit for the affected items.",
+    "creditAmount": 1260.00,
+    "affectedItems": ["PROD001"],
+    "additionalNotes": "RetailCorp Ltd (issuer) is a business banking customer of UK Business Bank PLC. Northern Supplies Limited (recipient) banks with Barclays Bank PLC. Credit amount includes 3 desks at £350 each plus proportional delivery cost. Payment will be made via bank transfer to recipient's Barclays account.",
+    "requiresApproval": false,
+    "approverEmail": null
+  }
+}

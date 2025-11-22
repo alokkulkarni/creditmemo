@@ -107,10 +107,52 @@ public class CreditMemoService {
     @NonNull
     @SuppressWarnings("null")
     private String buildCreditMemoPrompt(@NonNull CreditMemoRequest request) {
-        // Determine context based on requester type
+        // Determine issuer and context based on requester type
+        boolean isBankIssued = (request.requester().requesterType() == CreditMemoRequest.RequesterType.BANK_COLLEAGUE);
+        
+        // For bank colleague: Bank is issuer, customer is recipient
+        // For business customer: Business customer (from issuer field) is issuer, customer is recipient
+        String issuerName;
+        String issuerAddress;
+        String issuerEmail;
+        String issuerPhone;
+        String issuerAccountNumber;
+        
+        if (isBankIssued) {
+            // Bank is the issuer
+            issuerName = "UK Business Bank PLC";
+            issuerAddress = "1 Bank Street, London, EC2R 8AH, United Kingdom";
+            issuerEmail = "customerservice@ukbusinessbank.com";
+            issuerPhone = "0800-123-4567";
+            issuerAccountNumber = "N/A (Bank)";
+        } else {
+            // Business customer is the issuer - use issuer field if provided, otherwise derive from context
+            if (request.issuer() != null && request.issuer().companyName() != null) {
+                issuerName = request.issuer().companyName();
+                issuerAddress = request.issuer().address() != null 
+                    ? String.format("%s, %s, %s %s, %s",
+                        request.issuer().address().street(),
+                        request.issuer().address().city(),
+                        request.issuer().address().state(),
+                        request.issuer().address().zipCode(),
+                        request.issuer().address().country())
+                    : "N/A";
+                issuerEmail = request.issuer().email() != null ? request.issuer().email() : "N/A";
+                issuerPhone = request.issuer().phone() != null ? request.issuer().phone() : "N/A";
+                issuerAccountNumber = request.issuer().accountNumber() != null ? request.issuer().accountNumber() : "N/A";
+            } else {
+                // Fallback: extract from requester email domain
+                issuerName = "Business Customer";
+                issuerAddress = "N/A";
+                issuerEmail = request.requester().email();
+                issuerPhone = "N/A";
+                issuerAccountNumber = "N/A";
+            }
+        }
+        
         String contextNote = switch (request.requester().requesterType()) {
-            case BUSINESS_CUSTOMER -> "This credit memo is issued by a business banking customer for their own customer.";
-            case BANK_COLLEAGUE -> "This credit memo corrects an incorrect fee charge posted by the bank.";
+            case BUSINESS_CUSTOMER -> "This credit memo is issued by a business banking customer (" + issuerName + ") for their own customer. The business customer is a client of UK Business Bank PLC.";
+            case BANK_COLLEAGUE -> "This credit memo is issued by UK Business Bank PLC to correct an incorrect fee charge or banking error for their business customer.";
             case SYSTEM_AUTOMATED -> "This credit memo is system-generated for automated processing.";
             case CUSTOMER_SERVICE -> "This credit memo is issued by customer service on behalf of the customer.";
         };
@@ -119,18 +161,16 @@ public class CreditMemoService {
         StringBuilder lineItemsDetail = new StringBuilder();
         if (request.originalTransaction().lineItems() != null && !request.originalTransaction().lineItems().isEmpty()) {
             request.originalTransaction().lineItems().forEach(item -> {
-                lineItemsDetail.append(String.format("\n  - Item: %s | Description: %s | Qty: %d | Unit Price: %.2f %s | Total: %.2f %s",
+                lineItemsDetail.append(String.format("\n  - Item: %s | Description: %s | Qty: %d | Unit Price: £%.2f | Total: £%.2f",
                     item.itemId(),
                     item.description(),
                     item.quantity(),
                     item.unitPrice(),
-                    request.originalTransaction().currency(),
-                    item.totalPrice(),
-                    request.originalTransaction().currency()));
+                    item.totalPrice()));
             });
         }
         
-        // Calculate tax (assuming 20% UK VAT for business transactions)
+        // Calculate tax (20% UK VAT)
         BigDecimal creditAmount = request.creditDetails().creditAmount();
         BigDecimal taxRate = new BigDecimal("0.20");
         BigDecimal subtotal = creditAmount.divide(BigDecimal.ONE.add(taxRate), 2, java.math.RoundingMode.HALF_UP);
@@ -144,6 +184,25 @@ public class CreditMemoService {
             LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy")),
             UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         
+        // Build bank details section if provided
+        String bankDetailsSection = "";
+        if (request.customer().bankDetails() != null) {
+            CreditMemoRequest.BankDetails bd = request.customer().bankDetails();
+            bankDetailsSection = String.format("""
+                Bank Details (Recipient banks with different institution):
+                  Bank Name: %s
+                  Bank Branch: %s
+                  Sort Code: %s
+                  SWIFT/BIC: %s
+                  Account Holder: %s""",
+                bd.bankName() != null ? bd.bankName() : "N/A",
+                bd.bankBranch() != null ? bd.bankBranch() : "N/A",
+                bd.sortCode() != null ? bd.sortCode() : "N/A",
+                bd.swiftCode() != null ? bd.swiftCode() : "N/A",
+                bd.accountHolderName() != null ? bd.accountHolderName() : "N/A"
+            );
+        }
+        
         return String.format("""
             Generate a professional UK business banking credit memo using the following data:
             
@@ -153,31 +212,37 @@ public class CreditMemoService {
             === CREDIT MEMO DETAILS ===
             Credit Memo Number: %s
             Issue Date: %s
-            Company: UK Business Bank PLC
-            Company Address: 1 Bank Street, London, EC2R 8AH, United Kingdom
             
-            === CUSTOMER INFORMATION ===
+            === ISSUER INFORMATION (Who is issuing this credit memo) ===
+            Issuer Name: %s
+            Issuer Address: %s
+            Issuer Email: %s
+            Issuer Phone: %s
+            Issuer Account: %s
+            
+            === RECIPIENT INFORMATION (Who is receiving this credit) ===
             Customer ID: %s
             Customer Name: %s
             Customer Email: %s
             Customer Phone: %s
             Billing Address: %s, %s, %s %s, %s
             Account Number: %s
+            %s
             
             === ORIGINAL TRANSACTION ===
             Transaction ID: %s
             Invoice Number: %s
             Invoice Date: %s
-            Original Amount: %.2f %s
+            Original Amount: £%.2f
             Line Items: %s
             
             === CREDIT DETAILS ===
             Credit Type: %s
             Credit Reason: %s
             Reason Description: %s
-            Credit Amount (incl. tax): %.2f %s
-            Subtotal (excl. tax): %.2f %s
-            Tax Amount (20%% VAT): %.2f %s
+            Credit Amount (incl. tax): £%.2f
+            Subtotal (excl. tax): £%.2f
+            Tax Amount (20%% VAT): £%.2f
             Affected Items: %s
             Additional Notes: %s
             
@@ -192,14 +257,21 @@ public class CreditMemoService {
             {
               "creditMemoNumber": "%s",
               "issueDate": "%s",
-              "companyName": "UK Business Bank PLC",
-              "companyAddress": "1 Bank Street, London, EC2R 8AH, United Kingdom",
-              "customer": {
+              "issuer": {
+                "name": "%s",
+                "address": "%s",
+                "email": "%s",
+                "phone": "%s",
+                "accountNumber": "%s"
+              },
+              "recipient": {
                 "customerId": "%s",
                 "name": "%s",
                 "address": "%s, %s, %s %s, %s",
                 "email": "%s",
-                "phone": "%s"
+                "phone": "%s",
+                "accountNumber": "%s",
+                "bankDetails": %s
               },
               "originalInvoice": {
                 "invoiceNumber": "%s",
@@ -225,7 +297,7 @@ public class CreditMemoService {
                 "subtotal": %.2f,
                 "taxAmount": %.2f,
                 "totalCreditAmount": %.2f,
-                "currency": "%s"
+                "currency": "GBP"
               },
               "termsAndConditions": "This credit memo will be applied to your account within 5-7 business days. The credited amount will be reflected in your next statement. For queries, please contact our customer service team at customerservice@ukbusinessbank.com or call 0800-123-4567. Credit memo issued in accordance with UK business banking regulations and FCA guidelines.",
               "authorizedBy": "%s",
@@ -240,6 +312,9 @@ public class CreditMemoService {
             5. All numeric values must be decimals without commas
             6. Dates in YYYY-MM-DD format
             7. Do not invent any financial figures - calculate from provided data
+            8. If bank details are provided for recipient, include them in the bankDetails object
+            9. If no bank details provided, set bankDetails to null
+            10. Bank details indicate the recipient banks with a different institution than the issuer
             """,
             // Context
             contextNote,
@@ -248,7 +323,14 @@ public class CreditMemoService {
             creditMemoNumber,
             LocalDateTime.now().toLocalDate(),
             
-            // Customer information
+            // Issuer information (bank or business customer)
+            issuerName,
+            issuerAddress,
+            issuerEmail,
+            issuerPhone,
+            issuerAccountNumber,
+            
+            // Recipient information (always the customer field)
             request.customer().customerId(),
             request.customer().customerName(),
             request.customer().email(),
@@ -259,13 +341,13 @@ public class CreditMemoService {
             request.customer().billingAddress().zipCode(),
             request.customer().billingAddress().country(),
             request.customer().accountNumber(),
+            bankDetailsSection,
             
             // Original transaction
             request.originalTransaction().transactionId(),
             request.originalTransaction().invoiceNumber(),
             request.originalTransaction().transactionDate(),
             request.originalTransaction().originalAmount(),
-            request.originalTransaction().currency(),
             lineItemsDetail.toString(),
             
             // Credit details
@@ -273,11 +355,8 @@ public class CreditMemoService {
             request.creditDetails().reason(),
             request.creditDetails().reasonDescription(),
             creditAmount,
-            request.originalTransaction().currency(),
             subtotal,
-            request.originalTransaction().currency(),
             taxAmount,
-            request.originalTransaction().currency(),
             request.creditDetails().affectedItems() != null ? String.join(", ", request.creditDetails().affectedItems()) : "All items",
             request.creditDetails().additionalNotes(),
             
@@ -290,6 +369,13 @@ public class CreditMemoService {
             // JSON template values
             creditMemoNumber,
             LocalDateTime.now().toLocalDate(),
+            // Issuer info for JSON template
+            issuerName,
+            issuerAddress,
+            issuerEmail,
+            issuerPhone,
+            issuerAccountNumber,
+            // Recipient info for JSON template
             request.customer().customerId(),
             request.customer().customerName(),
             request.customer().billingAddress().street(),
@@ -299,6 +385,16 @@ public class CreditMemoService {
             request.customer().billingAddress().country(),
             request.customer().email(),
             request.customer().phone() != null ? request.customer().phone() : "N/A",
+            request.customer().accountNumber(),
+            // Bank details JSON
+            request.customer().bankDetails() != null 
+                ? String.format("{\"bankName\": \"%s\", \"bankBranch\": \"%s\", \"sortCode\": \"%s\", \"swiftCode\": \"%s\", \"accountHolderName\": \"%s\"}",
+                    request.customer().bankDetails().bankName() != null ? request.customer().bankDetails().bankName() : "",
+                    request.customer().bankDetails().bankBranch() != null ? request.customer().bankDetails().bankBranch() : "",
+                    request.customer().bankDetails().sortCode() != null ? request.customer().bankDetails().sortCode() : "",
+                    request.customer().bankDetails().swiftCode() != null ? request.customer().bankDetails().swiftCode() : "",
+                    request.customer().bankDetails().accountHolderName() != null ? request.customer().bankDetails().accountHolderName() : "")
+                : "null",
             request.originalTransaction().invoiceNumber(),
             request.originalTransaction().transactionDate(),
             request.originalTransaction().originalAmount(),
@@ -307,7 +403,6 @@ public class CreditMemoService {
             subtotal,
             taxAmount,
             creditAmount,
-            request.originalTransaction().currency(),
             request.requester().name(),
             request.creditDetails().additionalNotes()
         );
@@ -411,14 +506,34 @@ public class CreditMemoService {
         StringBuilder sb = new StringBuilder();
         sb.append("=== CREDIT MEMO ===\n\n");
         sb.append("Credit Memo Number: ").append(document.creditMemoNumber()).append("\n");
-        sb.append("Issue Date: ").append(document.issueDate()).append("\n");
-        sb.append("Company: ").append(document.companyName()).append("\n");
-        sb.append("Address: ").append(document.companyAddress()).append("\n\n");
+        sb.append("Issue Date: ").append(document.issueDate()).append("\n\n");
         
-        sb.append("CUSTOMER INFORMATION:\n");
-        sb.append("Name: ").append(document.customer().name()).append("\n");
-        sb.append("Customer ID: ").append(document.customer().customerId()).append("\n");
-        sb.append("Address: ").append(document.customer().address()).append("\n\n");
+        sb.append("ISSUER (FROM):\n");
+        sb.append("Name: ").append(document.issuer().name()).append("\n");
+        sb.append("Address: ").append(document.issuer().address()).append("\n");
+        sb.append("Email: ").append(document.issuer().email()).append("\n");
+        sb.append("Phone: ").append(document.issuer().phone()).append("\n");
+        if (document.issuer().accountNumber() != null && !document.issuer().accountNumber().equals("N/A (Bank)")) {
+            sb.append("Account: ").append(document.issuer().accountNumber()).append("\n");
+        }
+        sb.append("\n");
+        
+        sb.append("RECIPIENT (TO):\n");
+        sb.append("Name: ").append(document.recipient().name()).append("\n");
+        sb.append("Customer ID: ").append(document.recipient().customerId()).append("\n");
+        sb.append("Address: ").append(document.recipient().address()).append("\n");
+        sb.append("Email: ").append(document.recipient().email()).append("\n");
+        sb.append("Account: ").append(document.recipient().accountNumber()).append("\n");
+        
+        if (document.recipient().bankDetails() != null) {
+            sb.append("\nRecipient Bank Details:\n");
+            sb.append("  Bank: ").append(document.recipient().bankDetails().bankName()).append("\n");
+            sb.append("  Branch: ").append(document.recipient().bankDetails().bankBranch()).append("\n");
+            sb.append("  Sort Code: ").append(document.recipient().bankDetails().sortCode()).append("\n");
+            sb.append("  SWIFT: ").append(document.recipient().bankDetails().swiftCode()).append("\n");
+            sb.append("  Account Holder: ").append(document.recipient().bankDetails().accountHolderName()).append("\n");
+        }
+        sb.append("\n");
         
         sb.append("ORIGINAL INVOICE REFERENCE:\n");
         sb.append("Invoice Number: ").append(document.originalInvoice().invoiceNumber()).append("\n");

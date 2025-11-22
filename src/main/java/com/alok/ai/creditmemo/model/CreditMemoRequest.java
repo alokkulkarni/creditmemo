@@ -15,7 +15,11 @@ public record CreditMemoRequest(
     @Valid
     RequesterInfo requester,
     
-    // Customer Information
+    // Issuer Information (for BUSINESS_CUSTOMER: the business issuing the credit memo)
+    @Valid
+    IssuerInfo issuer,
+    
+    // Customer Information (Recipient of the credit memo)
     @NotNull(message = "Customer information is required")
     @Valid
     CustomerInfo customer,
@@ -42,6 +46,15 @@ public record CreditMemoRequest(
         String department
     ) {}
     
+    public record IssuerInfo(
+        String companyName,
+        String email,
+        String phone,
+        @Valid
+        Address address,
+        String accountNumber
+    ) {}
+    
     public record CustomerInfo(
         @NotNull(message = "Customer ID is required")
         String customerId,
@@ -51,7 +64,9 @@ public record CreditMemoRequest(
         String phone,
         @Valid
         Address billingAddress,
-        String accountNumber
+        String accountNumber,
+        @Valid
+        BankDetails bankDetails  // Optional: Required only if customer banks with a different bank
     ) {}
     
     public record Address(
@@ -60,6 +75,14 @@ public record CreditMemoRequest(
         String state,
         String zipCode,
         String country
+    ) {}
+    
+    public record BankDetails(
+        String bankName,
+        String bankBranch,
+        String sortCode,
+        String swiftCode,
+        String accountHolderName
     ) {}
     
     public record TransactionInfo(

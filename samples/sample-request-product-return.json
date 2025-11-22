@@ -3,29 +3,29 @@
     "requesterId": "SYS001",
     "requesterType": "SYSTEM_AUTOMATED",
     "name": "Automated Return System",
-    "email": "returns@bank.com",
+    "email": "returns@ukbusinessbank.com",
     "department": "Returns Processing"
   },
   "customer": {
     "customerId": "CUST67890",
-    "customerName": "TechStart Inc",
-    "email": "finance@techstart.com",
-    "phone": "+1-555-0200",
+    "customerName": "TechStart Ltd",
+    "email": "finance@techstart.co.uk",
+    "phone": "+44-161-496-0000",
     "billingAddress": {
-      "street": "456 Innovation Drive",
-      "city": "San Francisco",
-      "state": "CA",
-      "zipCode": "94105",
-      "country": "USA"
+      "street": "456 Innovation Way",
+      "city": "Manchester",
+      "state": "Greater Manchester",
+      "zipCode": "M1 2HF",
+      "country": "United Kingdom"
     },
-    "accountNumber": "ACC123789"
+    "accountNumber": "GB82WEST12345698765432"
   },
   "originalTransaction": {
     "transactionId": "TXN002",
     "invoiceNumber": "INV-2024-045",
     "transactionDate": "2024-11-01",
     "originalAmount": 12000.00,
-    "currency": "USD",
+    "currency": "GBP",
     "lineItems": [
       {
         "itemId": "ITEM100",

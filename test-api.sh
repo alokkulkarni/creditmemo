@@ -65,8 +65,28 @@ echo ""
 echo "---"
 echo ""
 
-# Test 6: Invalid Request (should fail validation)
-echo -e "${YELLOW}Test 6: Invalid Request (Empty Body)${NC}"
+# Test 6: Generate Credit Memo (Business Customer)
+echo -e "${YELLOW}Test 6: Generate Credit Memo - Business Customer Scenario${NC}"
+echo "POST ${BASE_URL}${API_PATH}"
+curl -s -X POST "${BASE_URL}${API_PATH}" \
+  -H "Content-Type: application/json" \
+  -d @samples/sample-request-business-customer.json | jq .
+echo ""
+echo "---"
+echo ""
+
+# Test 7: Generate Credit Memo (Business Customer - External Bank)
+echo -e "${YELLOW}Test 7: Generate Credit Memo - Business Customer with External Bank${NC}"
+echo "POST ${BASE_URL}${API_PATH}"
+curl -s -X POST "${BASE_URL}${API_PATH}" \
+  -H "Content-Type: application/json" \
+  -d @samples/sample-request-external-bank-customer.json | jq .
+echo ""
+echo "---"
+echo ""
+
+# Test 8: Invalid Request (should fail validation)
+echo -e "${YELLOW}Test 8: Invalid Request (Empty Body)${NC}"
 echo "POST ${BASE_URL}${API_PATH}"
 curl -s -X POST "${BASE_URL}${API_PATH}" \
   -H "Content-Type: application/json" \

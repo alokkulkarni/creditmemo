@@ -1,0 +1,68 @@
+{
+  "requester": {
+    "requesterId": "REQ002",
+    "requesterType": "BUSINESS_CUSTOMER",
+    "name": "Sarah Johnson",
+    "email": "sarah.johnson@techstart.co.uk",
+    "department": "Finance"
+  },
+  "issuer": {
+    "companyName": "TechStart Ltd",
+    "email": "finance@techstart.co.uk",
+    "phone": "+44-161-496-0000",
+    "address": {
+      "street": "456 Innovation Way",
+      "city": "Manchester",
+      "state": "Greater Manchester",
+      "zipCode": "M1 2HF",
+      "country": "United Kingdom"
+    },
+    "accountNumber": "GB82WEST12345698765432"
+  },
+  "customer": {
+    "customerId": "CUST67890",
+    "customerName": "Digital Solutions Ltd",
+    "email": "accounts@digitalsolutions.co.uk",
+    "phone": "+44-161-555-8900",
+    "billingAddress": {
+      "street": "25 Market Street",
+      "city": "Manchester",
+      "state": "Greater Manchester",
+      "zipCode": "M2 4WQ",
+      "country": "United Kingdom"
+    },
+    "accountNumber": "GB77MIDL40051512345678"
+  },
+  "originalTransaction": {
+    "transactionId": "TXN789",
+    "invoiceNumber": "INV-TS-2024-056",
+    "transactionDate": "2024-10-15",
+    "originalAmount": 3600.00,
+    "currency": "GBP",
+    "lineItems": [
+      {
+        "itemId": "SOFT001",
+        "description": "Software Development Services - October 2024",
+        "quantity": 40,
+        "unitPrice": 75.00,
+        "totalPrice": 3000.00
+      },
+      {
+        "itemId": "SUPP001",
+        "description": "Technical Support Hours",
+        "quantity": 20,
+        "unitPrice": 30.00,
+        "totalPrice": 600.00
+      }
+    ]
+  },
+  "creditDetails": {
+    "reason": "SERVICE_ISSUE",
+    "reasonDescription": "Customer reported that 10 hours of software development services were not delivered to agreed quality standards and required rework. Issuing partial credit for the affected hours.",
+    "creditAmount": 900.00,
+    "affectedItems": ["SOFT001"],
+    "additionalNotes": "Credit agreed upon after customer satisfaction review. TechStart Ltd (business customer) is issuing this credit memo to their client Digital Solutions Ltd. Both companies are banking with UK Business Bank PLC.",
+    "requiresApproval": false,
+    "approverEmail": null
+  }
+}
