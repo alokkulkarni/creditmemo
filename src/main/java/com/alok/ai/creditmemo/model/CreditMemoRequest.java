@@ -1,5 +1,7 @@
 package com.alok.ai.creditmemo.model;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -9,31 +11,45 @@ import java.util.List;
  */
 public record CreditMemoRequest(
     // Requester Information
+    @NotNull(message = "Requester information is required")
+    @Valid
     RequesterInfo requester,
     
     // Customer Information
+    @NotNull(message = "Customer information is required")
+    @Valid
     CustomerInfo customer,
     
     // Original Transaction Details
+    @NotNull(message = "Original transaction information is required")
+    @Valid
     TransactionInfo originalTransaction,
     
     // Credit Reason and Details
+    @NotNull(message = "Credit details are required")
+    @Valid
     CreditDetails creditDetails
 ) {
     
     public record RequesterInfo(
+        @NotNull(message = "Requester ID is required")
         String requesterId,
+        @NotNull(message = "Requester type is required")
         RequesterType requesterType,
+        @NotNull(message = "Requester name is required")
         String name,
         String email,
         String department
     ) {}
     
     public record CustomerInfo(
+        @NotNull(message = "Customer ID is required")
         String customerId,
+        @NotNull(message = "Customer name is required")
         String customerName,
         String email,
         String phone,
+        @Valid
         Address billingAddress,
         String accountNumber
     ) {}
@@ -48,10 +64,15 @@ public record CreditMemoRequest(
     
     public record TransactionInfo(
         String transactionId,
+        @NotNull(message = "Invoice number is required")
         String invoiceNumber,
+        @NotNull(message = "Transaction date is required")
         LocalDate transactionDate,
+        @NotNull(message = "Original amount is required")
         BigDecimal originalAmount,
+        @NotNull(message = "Currency is required")
         String currency,
+        @Valid
         List<LineItem> lineItems
     ) {}
     
@@ -64,8 +85,11 @@ public record CreditMemoRequest(
     ) {}
     
     public record CreditDetails(
+        @NotNull(message = "Credit reason is required")
         CreditReason reason,
+        @NotNull(message = "Reason description is required")
         String reasonDescription,
+        @NotNull(message = "Credit amount is required")
         BigDecimal creditAmount,
         List<String> affectedItems,
         String additionalNotes,
