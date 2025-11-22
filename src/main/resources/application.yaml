@@ -11,7 +11,8 @@ spring:
             # Model options: anthropic.claude-3-5-sonnet-20240620-v1:0, anthropic.claude-3-sonnet-20240229-v1:0
             # anthropic.claude-3-haiku-20240307-v1:0, meta.llama3-1-405b-instruct-v1:0
             # Note: Claude 4.5 (anthropic.claude-sonnet-4-5-20250929-v1:0) requires inference profile ARN
-            model: anthropic.claude-3-5-sonnet-20240620-v1:0
+            model: arn:aws:bedrock:eu-west-2:395402194296:inference-profile/global.anthropic.claude-sonnet-4-5-2
+0250929-v1:0
             temperature: 0.7
             max-tokens: 4096
             top-p: 0.9
