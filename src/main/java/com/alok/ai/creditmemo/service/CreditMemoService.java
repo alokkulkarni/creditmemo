@@ -7,11 +7,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
-import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -27,7 +28,8 @@ public class CreditMemoService {
     @Value("${spring.ai.bedrock.converse.chat.model:anthropic.claude-3-5-sonnet-20240620-v1:0}")
     private String modelName;
     
-    public CreditMemoService(ChatModel chatModel) {
+    public CreditMemoService(@NonNull ChatModel chatModel) {
+        Objects.requireNonNull(chatModel, "ChatModel must not be null");
         this.chatClient = ChatClient.builder(chatModel).build();
         logger.info("CreditMemoService initialized with ChatClient");
     }
@@ -35,7 +37,9 @@ public class CreditMemoService {
     /**
      * Generate a credit memo based on the provided request
      */
-    public CreditMemoResponse generateCreditMemo(CreditMemoRequest request) {
+    public CreditMemoResponse generateCreditMemo(@NonNull CreditMemoRequest request) {
+        Objects.requireNonNull(request, "CreditMemoRequest must not be null");
+        
         logger.info("Generating credit memo for customer: {}, requester type: {}", 
                     request.customer().customerId(), 
                     request.requester().requesterType());
@@ -45,16 +49,15 @@ public class CreditMemoService {
         try {
             // Build the prompt for credit memo generation
             String prompt = buildCreditMemoPrompt(request);
-            
-            // Create output converter for structured response
-            BeanOutputConverter<CreditMemoDocument> outputConverter = 
-                new BeanOutputConverter<>(CreditMemoDocument.class);
+            Objects.requireNonNull(prompt, "Generated prompt must not be null");
             
             // Call Bedrock via Spring AI
             CreditMemoDocument document = chatClient.prompt()
                 .user(prompt)
                 .call()
                 .entity(CreditMemoDocument.class);
+            
+            Objects.requireNonNull(document, "AI failed to generate credit memo document");
             
             long processingTime = System.currentTimeMillis() - startTime;
             
@@ -70,11 +73,14 @@ public class CreditMemoService {
     /**
      * Generate a summary of the credit memo without full document
      */
-    public String generateCreditMemoSummary(CreditMemoRequest request) {
+    public String generateCreditMemoSummary(@NonNull CreditMemoRequest request) {
+        Objects.requireNonNull(request, "CreditMemoRequest must not be null");
+        
         logger.info("Generating credit memo summary for customer: {}", 
                     request.customer().customerId());
         
         String summaryPrompt = buildSummaryPrompt(request);
+        Objects.requireNonNull(summaryPrompt, "Summary prompt must not be null");
         
         return chatClient.prompt()
             .user(summaryPrompt)
@@ -85,11 +91,11 @@ public class CreditMemoService {
     /**
      * Validate credit memo request using AI
      */
-    public ValidationResult validateCreditMemoRequest(CreditMemoRequest request) {
-        String validationPrompt = buildValidationPrompt(request);
+    public ValidationResult validateCreditMemoRequest(@NonNull CreditMemoRequest request) {
+        Objects.requireNonNull(request, "CreditMemoRequest must not be null");
         
-        BeanOutputConverter<ValidationResult> outputConverter = 
-            new BeanOutputConverter<>(ValidationResult.class);
+        String validationPrompt = buildValidationPrompt(request);
+        Objects.requireNonNull(validationPrompt, "Validation prompt must not be null");
         
         return chatClient.prompt()
             .user(validationPrompt)
@@ -97,7 +103,9 @@ public class CreditMemoService {
             .entity(ValidationResult.class);
     }
     
-    private String buildCreditMemoPrompt(CreditMemoRequest request) {
+    @NonNull
+    @SuppressWarnings("null")
+    private String buildCreditMemoPrompt(@NonNull CreditMemoRequest request) {
         return String.format("""
             You are a financial document specialist tasked with generating a professional credit memo.
             
@@ -168,7 +176,9 @@ public class CreditMemoService {
         );
     }
     
-    private String buildSummaryPrompt(CreditMemoRequest request) {
+    @NonNull
+    @SuppressWarnings("null")
+    private String buildSummaryPrompt(@NonNull CreditMemoRequest request) {
         return String.format("""
             Provide a brief 2-3 sentence summary of this credit memo request:
             
@@ -191,7 +201,9 @@ public class CreditMemoService {
         );
     }
     
-    private String buildValidationPrompt(CreditMemoRequest request) {
+    @NonNull
+    @SuppressWarnings("null")
+    private String buildValidationPrompt(@NonNull CreditMemoRequest request) {
         return String.format("""
             Validate this credit memo request and identify any issues or concerns:
             
@@ -218,8 +230,9 @@ public class CreditMemoService {
         );
     }
     
-    private CreditMemoResponse buildResponse(CreditMemoRequest request, 
-                                             CreditMemoDocument document, 
+    @NonNull
+    private CreditMemoResponse buildResponse(@NonNull CreditMemoRequest request, 
+                                             @NonNull CreditMemoDocument document, 
                                              long processingTime) {
         String creditMemoId = UUID.randomUUID().toString();
         
@@ -255,7 +268,9 @@ public class CreditMemoService {
         );
     }
     
-    private String formatDocumentAsString(CreditMemoDocument document) {
+    @NonNull
+    @SuppressWarnings("null")
+    private String formatDocumentAsString(@NonNull CreditMemoDocument document) {
         StringBuilder sb = new StringBuilder();
         sb.append("=== CREDIT MEMO ===\n\n");
         sb.append("Credit Memo Number: ").append(document.creditMemoNumber()).append("\n");

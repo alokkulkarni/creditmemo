@@ -4,6 +4,9 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.lang.NonNull;
+
+import java.util.Objects;
 
 /**
  * Configuration for Spring AI components
@@ -15,7 +18,8 @@ public class SpringAiConfig {
      * Configure ChatClient bean for injection
      */
     @Bean
-    public ChatClient chatClient(ChatModel chatModel) {
+    public ChatClient chatClient(@NonNull ChatModel chatModel) {
+        Objects.requireNonNull(chatModel, "ChatModel must not be null");
         return ChatClient.builder(chatModel)
             .defaultSystem("""
                 You are a professional financial document specialist with expertise in 
