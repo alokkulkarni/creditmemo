@@ -6,6 +6,19 @@
     "email": "sarah.j@retailcorp.co.uk",
     "department": "Purchasing"
   },
+  "issuer": {
+    "companyName": "RetailCorp Ltd",
+    "email": "accounting@retailcorp.co.uk",
+    "phone": "+44-121-234-5678",
+    "address": {
+      "street": "789 Commerce Street",
+      "city": "Birmingham",
+      "state": "West Midlands",
+      "zipCode": "B1 1AA",
+      "country": "United Kingdom"
+    },
+    "accountNumber": "GB33BUKB20201555555555"
+  },
   "customer": {
     "customerId": "CUST11111",
     "customerName": "RetailCorp Ltd",
