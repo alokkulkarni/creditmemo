@@ -3,7 +3,7 @@
 # Credit Memo API Test Script
 # This script tests all endpoints of the Credit Memo Generation API
 
-BASE_URL="http://localhost:8080"
+BASE_URL="http://localhost:8999"
 API_PATH="/api/v1/credit-memos"
 
 echo "============================================"
